@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -25,6 +26,22 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import xxmmk.mobile.toir.R;
@@ -35,13 +52,8 @@ import xxmmk.mobile.toir.R;
  */
 public class LoginActivity extends Activity /*implements LoaderCallbacks<Cursor>*/{
 
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
-    };
+
+
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -52,17 +64,28 @@ public class LoginActivity extends Activity /*implements LoaderCallbacks<Cursor>
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    private MobileTOiRApp mMobileTOiRApp;
+
+    @Override
+    protected void onStart(){
+        super.onStart();
+        mEmailView.setText(mMobileTOiRApp.getmDbHelper().getSettingValue("username"));
+        mPasswordView.setText(mMobileTOiRApp.getmDbHelper().getSettingValue("password"));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mMobileTOiRApp = ((MobileTOiRApp) this.getApplication());
         setContentView(R.layout.activity_login);
 
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
-        populateAutoComplete();
+
+        //populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
+
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -145,7 +168,7 @@ public class LoginActivity extends Activity /*implements LoaderCallbacks<Cursor>
     }
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
-        return email.contains("@");
+        return true; //email.contains("@");
     }
 
     private boolean isPasswordValid(String password) {
@@ -251,6 +274,7 @@ public class LoginActivity extends Activity /*implements LoaderCallbacks<Cursor>
 
         private final String mEmail;
         private final String mPassword;
+        private String mToken = "null";
 
         UserLoginTask(String email, String password) {
             mEmail = email;
@@ -260,15 +284,73 @@ public class LoginActivity extends Activity /*implements LoaderCallbacks<Cursor>
         @Override
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
-
+            Boolean vStatus = false;
             try {
                 // Simulate network access.
-                Thread.sleep(2000);
+                StringBuilder builder = new StringBuilder();
+                HttpClient client = new DefaultHttpClient();
+                HttpGet httpGet = new HttpGet(mMobileTOiRApp.getLoginDataURL(mEmail,mPassword));
+                Log.d(mMobileTOiRApp.getLOG_TAG(), "LoginActivity.UserLoginTask " + mMobileTOiRApp.getLoginDataURL(mEmail,mPassword));
+
+                try {
+                    HttpResponse response = client.execute(httpGet);
+                    StatusLine statusLine = response.getStatusLine();
+                    int statusCode = statusLine.getStatusCode();
+                    if (statusCode == 200 )
+                    {
+                        HttpEntity entity = response.getEntity();
+                        InputStream content = entity.getContent();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(content));
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            builder.append(line);
+                        }
+                        try {
+                            //Toast.makeText(this.getBaseContext(), builder.toString(), Toast.LENGTH_LONG).show();
+                            JSONArray jsonArray = new JSONArray(builder.toString());
+                            for (int i=0;i<jsonArray.length();i++) {
+                                JSONObject jsonObject = jsonArray.getJSONObject(i);
+
+                                mToken = jsonObject.getString("token");
+                                vStatus = true;
+
+                            }
+                            //Toast.makeText(this.getBaseContext(),clientID, Toast.LENGTH_LONG).show();
+                        }
+                        catch (JSONException e) {
+                            e.printStackTrace();
+
+                        }
+                    }
+                    else {
+                        //Log.e("Login fail", "Login fail");
+                    }
+                }
+                catch (ClientProtocolException e) {
+                    e.printStackTrace();
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                Thread.sleep(10);
+                vStatus = vStatus && !mToken.equals("null");
+                if (vStatus) {
+                    Log.d(mMobileTOiRApp.getLOG_TAG(), "LoginActivity.Login OK ");
+                    mMobileTOiRApp.saveUsername(mEmail);
+                    mMobileTOiRApp.setmHASH(mToken);
+                    mMobileTOiRApp.getmDbHelper().refreshOrgs(builder.toString());
+                    return true;
+                } else {
+                    Log.d(mMobileTOiRApp.getLOG_TAG(), "LoginActivity.Login ERROR ");
+                    return false;
+                }
+
             } catch (InterruptedException e) {
                 return false;
             }
 
-            for (String credential : DUMMY_CREDENTIALS) {
+            /*for (String credential : DUMMY_CREDENTIALS) {
                 String[] pieces = credential.split(":");
                 if (pieces[0].equals(mEmail)) {
                     // Account exists, return true if the password matches.
@@ -277,7 +359,7 @@ public class LoginActivity extends Activity /*implements LoaderCallbacks<Cursor>
             }
 
             // TODO: register the new account here.
-            return true;
+            return true;*/
         }
 
         @Override
@@ -298,6 +380,8 @@ public class LoginActivity extends Activity /*implements LoaderCallbacks<Cursor>
             mAuthTask = null;
             showProgress(false);
         }
+
+
     }
 }
 

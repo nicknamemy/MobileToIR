@@ -22,6 +22,11 @@
             android:label="@string/title_activity_login"
             android:windowSoftInputMode="adjustResize|stateHidden" >
         </activity>
+        <activity
+            android:name=".OrgsActivity"
+            android:label="@string/title_activity_orgs"
+            android:windowSoftInputMode="adjustResize|stateHidden" >
+        </activity>
 
     </application>
     <!-- To access Google+ APIs: -->

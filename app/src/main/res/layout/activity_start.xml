@@ -26,7 +26,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/LoginText"
-        android:id="@+id/textView"
+        android:id="@+id/LoginInfo"
         android:layout_gravity="left"
         android:layout_weight="0.04" />
 
@@ -34,7 +34,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/Catalog"
-        android:id="@+id/button2"
+        android:id="@+id/buttonOrgs"
         android:layout_gravity="center_horizontal"
         android:layout_weight="0.10"
         android:textSize="24dp" />
@@ -43,7 +43,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/CatalogText"
-        android:id="@+id/textView2"
+        android:id="@+id/CatalogInfo"
         android:layout_gravity="center_horizontal"
         android:layout_weight="0.04" />
 
