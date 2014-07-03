@@ -21,6 +21,10 @@ public class MobileTOiRApp extends Application {
         return this.mDataBasicURL+"?s="+mCode+"&token="+this.getmHASH();
     }
 
+    public String getObjectDataURL(String mCode,String mOrgId) {
+        return this.mDataBasicURL+"?s="+mCode+"&token="+this.getmHASH()+"&org_id="+mOrgId;
+    }
+
     public String getLoginDataURL(String login, String password) {
         return this.mLoginURL+"?user="+login+"&password="+password;
     }

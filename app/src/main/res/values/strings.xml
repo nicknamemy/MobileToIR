@@ -2,14 +2,14 @@
 <resources>
 
     <string name="app_name">Мобильный ТОиР</string>
-
     <string name="action_settings">Settings</string>
     <string name="Login">Вход в систему</string>
     <string name="LoginText">Информация по логину</string>
     <string name="Catalog">Каталог оборудования</string>
     <string name="Scanning">Сканирование метки</string>
     <string name="CatalogText">Информация по каталогу</string>
-
     <string name="title_activity_orgs">Каталог оборудования </string>
+    <string name="title_activity_objects">Выбор оборудования</string>
+    <string name="hello_world">Hello world!</string>
 
 </resources>

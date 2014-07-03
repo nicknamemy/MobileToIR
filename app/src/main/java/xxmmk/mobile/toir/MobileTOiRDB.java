@@ -22,7 +22,7 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
 
     public MobileTOiRDB(Context context) {
         // конструктор суперкласса
-        super(context, "TOiRDB", null, 3);
+        super(context, "TOiRDB", null, 7);
         mContext = context;
     }
 
@@ -52,6 +52,56 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
                     + "org_id text,"
                     + "org_code text" + ");");
             db.execSQL("insert into settings (key) values ('orgs_date');");
+        }
+        if (newVersion == 4) {
+            Log.d(((MobileTOiRApp) mContext).getLOG_TAG(), "MobileTOiRDB.onUpgrade newVersion=" + newVersion);
+            db.execSQL("create table hierarchy ("
+                    + "id integer primary key autoincrement,"
+                    + "object_id text,"
+                    + "sn text,"
+                    + "description text,"
+                    + "parent_object_id text,"
+                    + "up_flag text" + ");");
+        }
+        if (newVersion == 5) {
+            Log.d(((MobileTOiRApp) mContext).getLOG_TAG(), "MobileTOiRDB.onUpgrade newVersion=" + newVersion);
+            db.execSQL("drop table hierarchy;");
+            db.execSQL("create table hierarchy ("
+                    + "id integer primary key autoincrement,"
+                    + "object_id text,"
+                    + "sn text,"
+                    + "description text,"
+                    + "parent_object_id text,"
+                    + "up_flag text,"
+                    + "org_id text"+ ");");
+        }
+        if (newVersion == 6) {
+            Log.d(((MobileTOiRApp) mContext).getLOG_TAG(), "MobileTOiRDB.onUpgrade newVersion=" + newVersion);
+            db.execSQL("drop table hierarchy;");
+            db.execSQL("create table hierarchy ("
+                    + "id integer primary key autoincrement,"
+                    + "object_id text,"
+                    + "sn text,"
+                    + "description text,"
+                    + "parent_object_id text,"
+                    + "up_flag text,"
+                    + "code text,"
+                    + "child_cnt text,"
+                    + "org_id text"+ ");");
+        }
+        if (newVersion == 7) {
+            Log.d(((MobileTOiRApp) mContext).getLOG_TAG(), "MobileTOiRDB.onUpgrade newVersion=" + newVersion);
+            db.execSQL("drop table hierarchy;");
+            db.execSQL("create table hierarchy ("
+                    + "id integer primary key autoincrement,"
+                    + "object_id text,"
+                    + "sn text,"
+                    + "description text,"
+                    + "parent_object_id text,"
+                    + "up_flag text,"
+                    + "org_id text,"
+                    + "code text,"
+                    + "child_cnt text);");
         }
     }
 
@@ -180,5 +230,103 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
         }
         return returnList;
     }
+
+    public ArrayList<HashMap<String,String>> getListObjects(String parentId, String orgId) {
+        ArrayList<HashMap<String,String>> returnList = new ArrayList<HashMap<String,String>>();
+        String selection = null;
+        String[] selectionArgs = null;
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        selection = "up_flag = ? and org_id = ?";
+        selectionArgs = new String[] { parentId, orgId};
+
+        Cursor cursor = db.query("hierarchy",
+                new String[] { "OBJECT_ID","SN","DESCRIPTION","PARENT_OBJECT_ID","UP_FLAG","ORG_ID","CODE","CHILD_CNT" }, selection, selectionArgs, null, null, " sn");
+        if (cursor.moveToFirst()) {
+            do {
+                HashMap<String, String> temp = new HashMap<String, String>();
+                temp.put("OBJECT_ID", cursor.getString(0));
+                temp.put("SN", cursor.getString(1));
+                temp.put("DESCRIPTION", cursor.getString(2));
+                temp.put("PARENT_OBJECT_ID", cursor.getString(3));
+                temp.put("UP_FLAG", cursor.getString(4));
+                temp.put("ORG_ID", cursor.getString(5));
+                temp.put("CODE", cursor.getString(6));
+                temp.put("CHILD_CNT", cursor.getString(7));
+                returnList.add(temp);
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null && !cursor.isClosed()) {
+            cursor.close();
+        }
+        return returnList;
+    }
+
+    public void loadObjects (String jsonObjects, String orgId) {
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+
+        try
+        {
+            db.execSQL("delete from hierarchy where org_id=?", new String[] {orgId});
+
+            try {
+                //Toast.makeText(this.getBaseContext(), builder.toString(), Toast.LENGTH_LONG).show();
+                JSONArray jsonArray = new JSONArray(jsonObjects);
+                for (int i=0;i<jsonArray.length();i++) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+
+                    db.execSQL("insert into hierarchy (OBJECT_ID,SN,DESCRIPTION,PARENT_OBJECT_ID,UP_FLAG,ORG_ID,CODE,CHILD_CNT) values (?,?,?,?,?,?,?,?);",
+                            new String[] {jsonObject.getString("OBJECT_ID")
+                                        ,jsonObject.getString("SN")
+                                        ,jsonObject.getString("DESCRIPTION")
+                                        ,jsonObject.getString("PARENT_OBJECT_ID")
+                                        ,jsonObject.getString("UP_FLAG")
+                                        ,jsonObject.getString("ORG_ID")
+                                        ,jsonObject.getString("CODE")
+                                        ,jsonObject.getString("CHILD_CNT")
+                            });
+
+                }
+
+            }
+            catch (JSONException e) {
+                e.printStackTrace();
+
+            }
+            //db.execSQL("update settings set value=? where key = ?", new String[]{new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(Calendar.getInstance().getTime()), "orgs_date"});
+            db.close();
+
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    public String getObjectId (String orgId){
+        String mReturn ="";
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        try
+        {
+            Cursor c = null;
+            c = db.rawQuery("select OBJECT_ID as OBJECT_ID from hierarchy where UP_FLAG ='' and ORG_ID = ?", new String[] { orgId });
+            c.moveToFirst();
+            mReturn = c.getString(c.getColumnIndex("OBJECT_ID"));
+            c.close();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return mReturn;
+    }
+
 
 }
