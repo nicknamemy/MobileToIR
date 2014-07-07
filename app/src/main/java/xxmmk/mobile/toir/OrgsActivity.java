@@ -2,6 +2,7 @@ package xxmmk.mobile.toir;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -19,6 +20,7 @@ public class OrgsActivity extends Activity {
         super.onCreate(savedInstanceState);
         mMobileTOiRApp = ((MobileTOiRApp) this.getApplication());
         setContentView(R.layout.activity_orgs);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
     @Override

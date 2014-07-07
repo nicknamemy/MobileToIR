@@ -22,7 +22,7 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
 
     public MobileTOiRDB(Context context) {
         // конструктор суперкласса
-        super(context, "TOiRDB", null, 7);
+        super(context, "TOiRDB", null, 1);
         mContext = context;
     }
 
@@ -35,10 +35,31 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
                 + "id integer primary key autoincrement,"
                 + "key text,"
                 + "value text" + ");");
+        db.execSQL("insert into settings (key) values ('username');");
+        db.execSQL("insert into settings (key) values ('password');");
+        db.execSQL("insert into settings (key) values ('token');");
+
+        db.execSQL("create table orgs ("
+                + "id integer primary key autoincrement,"
+                + "org_id text,"
+                + "org_code text" + ");");
+        db.execSQL("insert into settings (key) values ('orgs_date');");
+
+        db.execSQL("create table hierarchy ("
+                + "id integer primary key autoincrement,"
+                + "object_id text,"
+                + "sn text,"
+                + "description text,"
+                + "parent_object_id text,"
+                + "up_flag text,"
+                + "org_id text,"
+                + "code text,"
+                + "child_cnt text);");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        /*
         if (newVersion == 2) {
             Log.d(((MobileTOiRApp)mContext).getLOG_TAG(), "MobileTOiRDB.onUpgrade newVersion="+newVersion);
             db.execSQL("insert into settings (key) values ('username');");
@@ -102,7 +123,7 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
                     + "org_id text,"
                     + "code text,"
                     + "child_cnt text);");
-        }
+        }*/
     }
 
     public String getSettingValue (String key) {

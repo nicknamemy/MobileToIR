@@ -8,6 +8,7 @@ import android.app.LoaderManager.LoaderCallbacks;
 import android.content.ContentResolver;
 import android.content.CursorLoader;
 import android.content.Loader;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -29,11 +30,22 @@ import android.widget.TextView;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.params.HttpProtocolParams;
+import org.apache.http.protocol.HTTP;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -76,6 +88,7 @@ public class LoginActivity extends Activity /*implements LoaderCallbacks<Cursor>
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         mMobileTOiRApp = ((MobileTOiRApp) this.getApplication());
         setContentView(R.layout.activity_login);
 
@@ -266,6 +279,20 @@ public class LoginActivity extends Activity /*implements LoaderCallbacks<Cursor>
         mEmailView.setAdapter(adapter);
     }
     */
+    public static HttpClient createHttpClient()
+    {
+        HttpParams params = new BasicHttpParams();
+        HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
+        HttpProtocolParams.setContentCharset(params, HTTP.DEFAULT_CONTENT_CHARSET);
+        HttpProtocolParams.setUseExpectContinue(params, true);
+
+        SchemeRegistry schReg = new SchemeRegistry();
+        schReg.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+        schReg.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443));
+        ClientConnectionManager conMgr = new ThreadSafeClientConnManager(params, schReg);
+
+        return new DefaultHttpClient(conMgr, params);
+    }
     /**
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
@@ -287,8 +314,9 @@ public class LoginActivity extends Activity /*implements LoaderCallbacks<Cursor>
             Boolean vStatus = false;
             try {
                 // Simulate network access.
+                //mMobileTOiRApp.trustEveryone();
                 StringBuilder builder = new StringBuilder();
-                HttpClient client = new DefaultHttpClient();
+                HttpClient client =mMobileTOiRApp.getNewHttpClient(); //new DefaultHttpClient();
                 HttpGet httpGet = new HttpGet(mMobileTOiRApp.getLoginDataURL(mEmail,mPassword));
                 Log.d(mMobileTOiRApp.getLOG_TAG(), "LoginActivity.UserLoginTask " + mMobileTOiRApp.getLoginDataURL(mEmail,mPassword));
 

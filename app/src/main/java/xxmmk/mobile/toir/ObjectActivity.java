@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -56,6 +57,7 @@ public class ObjectActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_objects);
         listObjects = (ListView) this.findViewById(R.id.listObjects);
         mObjectForm = this.findViewById(R.id.objectForm);
@@ -128,8 +130,9 @@ public class ObjectActivity extends Activity {
 
         listObjects.setAdapter(adapter);
         */
-        loadList();
 
+
+        listObjects.setItemsCanFocus(false);
         listObjects.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
@@ -150,6 +153,32 @@ public class ObjectActivity extends Activity {
                 startActivity(intent);
             }
         });
+
+        listObjects.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View v,
+                                    final int position, long id) {
+                /*Log.i("List View Clicked", "**********");
+                Toast.makeText(this,"List View Clicked:" + position, Toast.LENGTH_LONG)
+                        .show();*/
+                Intent intent = new Intent(parent.getContext(), ObjectActivity.class);
+                Bundle b = new Bundle();
+                HashMap<String,String> obj = (HashMap<String,String>)adapter.getItem(position);
+
+
+                b.putString("ORG_ID", mOrgId);
+                b.putString("OBJECT_ID", obj.get("OBJECT_ID"));
+                b.putString("ORG_CODE", mOrgCode + "/" +obj.get("SN"));
+                //b.putSerializable("HashMap",obj);
+                Log.v(mMobileTOiRApp.getLOG_TAG(), "itemClick: position = " + position + ", id = " + id + " OBJECT_ID=" + obj.get("OBJECT_ID"));
+                intent.putExtras(b);
+                //intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            }
+        });
+
+        loadList();
     }
 
     public void loadList() {
@@ -244,7 +273,7 @@ public class ObjectActivity extends Activity {
             try {
                 // Simulate network access.
                 StringBuilder builder = new StringBuilder();
-                HttpClient client = new DefaultHttpClient();
+                HttpClient client = mMobileTOiRApp.getNewHttpClient(); new DefaultHttpClient();
                 //MobileTOiRApp app = MobileTOiRApp.getInstance();
                 Log.d(mMobileTOiRApp.getLOG_TAG(), "LoadObjects mOrgId=" + mOrgId);
                 HttpGet httpGet = new HttpGet(mMobileTOiRApp.getObjectDataURL("361", mOrgId));

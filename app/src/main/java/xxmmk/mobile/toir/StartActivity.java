@@ -15,11 +15,22 @@ import android.widget.Toast;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.params.HttpProtocolParams;
+import org.apache.http.protocol.HTTP;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -103,11 +114,13 @@ public class StartActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }*/
 
+
     public String statusConnect() {
         MobileTOiRApp app = ((MobileTOiRApp) this.getApplication());
+
         Log.d(app.getLOG_TAG(), "StartActivity.statusConnect");
         StringBuilder builder = new StringBuilder();
-        HttpClient client = new DefaultHttpClient();
+        HttpClient client = app.getNewHttpClient(); //createHttpClient(); // new DefaultHttpClient();
         HttpGet httpGet = new HttpGet(app.getDataURL("400"));
         Log.d(app.getLOG_TAG(), "StartActivity.statusConnect "+app.getDataURL("400"));
         String vErrorToken="Login OK";
