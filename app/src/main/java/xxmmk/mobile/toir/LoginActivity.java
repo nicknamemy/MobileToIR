@@ -318,7 +318,7 @@ public class LoginActivity extends Activity /*implements LoaderCallbacks<Cursor>
                 StringBuilder builder = new StringBuilder();
                 HttpClient client =mMobileTOiRApp.getNewHttpClient(); //new DefaultHttpClient();
                 HttpGet httpGet = new HttpGet(mMobileTOiRApp.getLoginDataURL(mEmail,mPassword));
-                Log.d(mMobileTOiRApp.getLOG_TAG(), "LoginActivity.UserLoginTask " + mMobileTOiRApp.getLoginDataURL(mEmail,mPassword));
+                //Log.d(mMobileTOiRApp.getLOG_TAG(), "LoginActivity.UserLoginTask " + mMobileTOiRApp.getLoginDataURL(mEmail,mPassword));
 
                 try {
                     HttpResponse response = client.execute(httpGet);

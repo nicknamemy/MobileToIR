@@ -357,12 +357,10 @@ public class ObjectActivity extends Activity {
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
             Boolean vStatus = false;
             try {
-                // Simulate network access.
                 StringBuilder builder = new StringBuilder();
-                HttpClient client = mMobileTOiRApp.getNewHttpClient(); new DefaultHttpClient();
+                HttpClient client = mMobileTOiRApp.getNewHttpClient();// new DefaultHttpClient();
                 //MobileTOiRApp app = MobileTOiRApp.getInstance();
                 Log.d(mMobileTOiRApp.getLOG_TAG(), "LoadObjects mOrgId=" + mOrgId);
                 HttpGet httpGet = new HttpGet(mMobileTOiRApp.getObjectDataURL("361", mOrgId));
@@ -402,16 +400,7 @@ public class ObjectActivity extends Activity {
                 return false;
             }
 
-            /*for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }
 
-            // TODO: register the new account here.
-            return true;*/
             return true;
         }
 

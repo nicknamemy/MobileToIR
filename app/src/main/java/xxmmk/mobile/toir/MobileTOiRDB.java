@@ -22,14 +22,14 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
 
     public MobileTOiRDB(Context context) {
         // конструктор суперкласса
-        super(context, "TOiRDB", null, 2);
+        super(context, "TOiRDB", null, 1);
         mContext = context;
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
 
-        Log.d(((MobileTOiRApp)mContext).getLOG_TAG(), "MobileTOiRDB.onCreate");
+        //Log.d(((MobileTOiRApp)mContext).getLOG_TAG(), "MobileTOiRDB.onCreate");
         // создаем таблицу с полями
         db.execSQL("create table settings ("
                 + "id integer primary key autoincrement,"
@@ -55,11 +55,15 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
                 + "org_id text,"
                 + "code text,"
                 + "child_cnt text);");
+        db.execSQL("create table new_code ("
+                + "id integer primary key autoincrement,"
+                + "object_id text,"
+                + "code text" + ");");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+/*
         if (newVersion == 2) {
             Log.d(((MobileTOiRApp)mContext).getLOG_TAG(), "MobileTOiRDB.onUpgrade newVersion="+newVersion);
             db.execSQL("create table new_code ("
@@ -67,7 +71,7 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
                     + "object_id text,"
                     + "code text" + ");");
         }
-        /*
+
         if (newVersion == 3) {
             Log.d(((MobileTOiRApp) mContext).getLOG_TAG(), "MobileTOiRDB.onUpgrade newVersion=" + newVersion);
             db.execSQL("create table orgs ("
