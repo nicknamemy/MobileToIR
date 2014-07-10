@@ -60,7 +60,6 @@ public class ScanActivity extends Activity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         mMobileTOiRApp = ((MobileTOiRApp) this.getApplication());
         setContentView(R.layout.activity_scan);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         ScanText4 = (TextView) this.findViewById(R.id.ScanText4);
         ScanText2 = (TextView) this.findViewById(R.id.ScanText2);
@@ -107,7 +106,7 @@ public class ScanActivity extends Activity {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.v(mMobileTOiRApp.getLOG_TAG(), "btnSave= ");
+                //Log.v(mMobileTOiRApp.getLOG_TAG(), "btnSave= ");
                 mMobileTOiRApp.getmDbHelper().setNewCode(mObjectId,mCode);
                 finish();
                 return;
@@ -117,7 +116,7 @@ public class ScanActivity extends Activity {
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.v(mMobileTOiRApp.getLOG_TAG(), "btnCancel ");
+                //Log.v(mMobileTOiRApp.getLOG_TAG(), "btnCancel ");
                 finish();
                 return;
             }
@@ -125,7 +124,7 @@ public class ScanActivity extends Activity {
     }
 
     public void enableForegroundMode() {
-        Log.d(TAG, "enableForegroundMode");
+        //Log.d(TAG, "enableForegroundMode");
 
         IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED); // filter for all
         IntentFilter[] writeTagFilters = new IntentFilter[] {tagDetected};
@@ -133,9 +132,52 @@ public class ScanActivity extends Activity {
     }
 
     public void disableForegroundMode() {
-        Log.d(TAG, "disableForegroundMode");
+        //Log.d(TAG, "disableForegroundMode");
 
         nfcAdapter.disableForegroundDispatch(this);
+    }
+
+
+
+    @Override
+    protected void onResume() {
+        //Log.d(TAG, "onResume");
+
+        super.onResume();
+
+        enableForegroundMode();
+    }
+
+    @Override
+    protected void onPause() {
+        //Log.d(TAG, "onPause");
+
+        super.onPause();
+
+        disableForegroundMode();
+    }
+
+    private void vibrate() {
+        //Log.d(TAG, "vibrate");
+
+        Vibrator vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE) ;
+        vibe.vibrate(500);
+    }
+
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        //Log.d(TAG, "onNewIntent");
+
+        if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction())) {
+
+            Tag myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+            ScanText4.setText(bytesToHex(myTag.getId()));
+            mCode = bytesToHex(myTag.getId());
+            ScanText4.setBackgroundColor(0xfff00000);
+            btnSave.setEnabled(true);
+            vibrate();
+        }
     }
 
     final protected static char[] hexArray = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
@@ -148,47 +190,6 @@ public class ScanActivity extends Activity {
             hexChars[j * 2 + 1] = hexArray[v & 0x0F];
         }
         return new String(hexChars);
-    }
-
-    @Override
-    protected void onResume() {
-        Log.d(TAG, "onResume");
-
-        super.onResume();
-
-        enableForegroundMode();
-    }
-
-    @Override
-    protected void onPause() {
-        Log.d(TAG, "onPause");
-
-        super.onPause();
-
-        disableForegroundMode();
-    }
-
-    private void vibrate() {
-        Log.d(TAG, "vibrate");
-
-        Vibrator vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE) ;
-        vibe.vibrate(500);
-    }
-
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        Log.d(TAG, "onNewIntent");
-
-        if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction())) {
-
-            Tag myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-            ScanText4.setText(bytesToHex(myTag.getId()));
-            mCode = bytesToHex(myTag.getId());
-            ScanText4.setBackgroundColor(0xfff00000);
-            btnSave.setEnabled(true);
-            vibrate();
-        }
     }
 
 

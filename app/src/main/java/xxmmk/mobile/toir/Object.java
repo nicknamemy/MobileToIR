@@ -23,7 +23,7 @@ public class Object {
 
     public Object(String parentId, String orgId) {
         mMobileTOiRApp = MobileTOiRApp.getInstance();
-        Log.d(mMobileTOiRApp.getLOG_TAG(), "Object parentId=" + parentId);
+        //Log.d(mMobileTOiRApp.getLOG_TAG(), "Object parentId=" + parentId);
         ObjectsList = mMobileTOiRApp.getmDbHelper().getListObjects(parentId,orgId);
     }
 }

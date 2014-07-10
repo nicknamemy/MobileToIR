@@ -19,9 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by Alex on 02.07.2014.
- */
+
 public class ObjectAdapter extends SimpleAdapter {
     private Context mContext;
     private MobileTOiRApp mMobileTOiRApp;
@@ -33,7 +31,7 @@ public class ObjectAdapter extends SimpleAdapter {
 
         mContext = context;
         mMobileTOiRApp = MobileTOiRApp.getInstance();
-        Log.d(mMobileTOiRApp.getLOG_TAG(), "ObjectAdapter " + mMobileTOiRApp.getmHASH());
+        //Log.d(mMobileTOiRApp.getLOG_TAG(), "ObjectAdapter " + mMobileTOiRApp.getmHASH());
         this.results = data;
 
     }

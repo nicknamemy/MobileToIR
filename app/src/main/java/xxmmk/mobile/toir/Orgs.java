@@ -21,7 +21,7 @@ public class Orgs {
 
     public Orgs() {
         mMobileTOiRApp = MobileTOiRApp.getInstance();
-        Log.d(mMobileTOiRApp.getLOG_TAG(), "Orgs " + mMobileTOiRApp.getmHASH());
+        //Log.d(mMobileTOiRApp.getLOG_TAG(), "Orgs " + mMobileTOiRApp.getmHASH());
         OrgsList = mMobileTOiRApp.getmDbHelper().getListOrgs();
     }
 }

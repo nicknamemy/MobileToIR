@@ -1,10 +1,15 @@
 package xxmmk.mobile.toir;
 
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -42,6 +47,8 @@ import java.io.InputStreamReader;
 
 
 public class StartActivity extends Activity {
+    protected NfcAdapter nfcAdapter;
+    protected PendingIntent nfcPendingIntent;
 
     @Override
     protected void onStart(){
@@ -58,6 +65,8 @@ public class StartActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        nfcPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, this.getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 
         StrictMode.setThreadPolicy(policy);
@@ -118,11 +127,11 @@ public class StartActivity extends Activity {
     public String statusConnect() {
         MobileTOiRApp app = ((MobileTOiRApp) this.getApplication());
 
-        Log.d(app.getLOG_TAG(), "StartActivity.statusConnect");
+        //Log.d(app.getLOG_TAG(), "StartActivity.statusConnect");
         StringBuilder builder = new StringBuilder();
         HttpClient client = app.getNewHttpClient(); //createHttpClient(); // new DefaultHttpClient();
         HttpGet httpGet = new HttpGet(app.getDataURL("400"));
-        Log.d(app.getLOG_TAG(), "StartActivity.statusConnect "+app.getDataURL("400"));
+        //Log.d(app.getLOG_TAG(), "StartActivity.statusConnect "+app.getDataURL("400"));
         String vErrorToken="Login OK";
         String vErrorNetwork="Network OK";
         try {
@@ -180,5 +189,56 @@ public class StartActivity extends Activity {
         MobileTOiRApp app = ((MobileTOiRApp) this.getApplication());
         vStatus = "Кол-во организаций: " + app.getmDbHelper().getCountOrgs() + " Обновлено: "+app.getmDbHelper().getTimeOfOrgs();
         return vStatus;
+    }
+
+    public void enableForegroundMode() {
+        //Log.d(TAG, "enableForegroundMode");
+
+        IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED); // filter for all
+        IntentFilter[] writeTagFilters = new IntentFilter[] {tagDetected};
+        nfcAdapter.enableForegroundDispatch(this, nfcPendingIntent, writeTagFilters, null);
+    }
+
+    public void disableForegroundMode() {
+        //Log.d(TAG, "disableForegroundMode");
+
+        nfcAdapter.disableForegroundDispatch(this);
+    }
+
+
+
+    @Override
+    protected void onResume() {
+        //Log.d(TAG, "onResume");
+
+        super.onResume();
+
+        enableForegroundMode();
+    }
+
+    @Override
+    protected void onPause() {
+        //Log.d(TAG, "onPause");
+
+        super.onPause();
+
+        disableForegroundMode();
+    }
+
+    private void vibrate() {
+        //Log.d(TAG, "vibrate");
+
+        Vibrator vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE) ;
+        vibe.vibrate(500);
+    }
+
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+
+        if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction())) {
+
+            //vibrate();
+        }
     }
 }

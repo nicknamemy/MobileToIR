@@ -7,14 +7,19 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -70,6 +75,8 @@ public class ObjectActivity extends Activity {
     Context context;
     ProgressDialog ringProgressDialog;
     ProgressDialog barProgressDialog;
+    protected NfcAdapter nfcAdapter;
+    protected PendingIntent nfcPendingIntent;
 
 
 
@@ -84,28 +91,11 @@ public class ObjectActivity extends Activity {
         mBottomBar =findViewById(R.id.bottom_bar);
         mMobileTOiRApp = ((MobileTOiRApp) this.getApplication());
         context = ObjectActivity.this;
+
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        nfcPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, this.getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
     }
 
-
-    /*@Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.objects, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-    */
 
     @Override
     protected void onStart() {
@@ -210,7 +200,7 @@ public class ObjectActivity extends Activity {
                 b.putString("OBJECT_ID", obj.get("OBJECT_ID"));
                 b.putString("ORG_CODE", mOrgCode + "/" +obj.get("SN"));
                 //b.putSerializable("HashMap",obj);
-                Log.v(mMobileTOiRApp.getLOG_TAG(), "itemClick: position = " + position + ", id = " + id + " OBJECT_ID=" + obj.get("OBJECT_ID"));
+                //Log.v(mMobileTOiRApp.getLOG_TAG(), "itemClick: position = " + position + ", id = " + id + " OBJECT_ID=" + obj.get("OBJECT_ID"));
                 intent.putExtras(b);
                 //intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
@@ -241,7 +231,7 @@ public class ObjectActivity extends Activity {
                 b.putString("OBJECT_ID", obj.get("OBJECT_ID"));
                 b.putString("ORG_CODE", mOrgCode + "/" +obj.get("SN"));
                 //b.putSerializable("HashMap",obj);
-                Log.v(mMobileTOiRApp.getLOG_TAG(), "itemClick: position = " + position + ", id = " + id + " OBJECT_ID=" + obj.get("OBJECT_ID"));
+                //Log.v(mMobileTOiRApp.getLOG_TAG(), "itemClick: position = " + position + ", id = " + id + " OBJECT_ID=" + obj.get("OBJECT_ID"));
                 intent.putExtras(b);
                 //intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
@@ -259,12 +249,12 @@ public class ObjectActivity extends Activity {
         int[] to = {R.id.objects_text1,R.id.objects_text2};
 
         Object objectitems;
-        Log.v(mMobileTOiRApp.getLOG_TAG(), "loadList() mObjectId = " + mObjectId );
+        //Log.v(mMobileTOiRApp.getLOG_TAG(), "loadList() mObjectId = " + mObjectId );
         if (mObjectId != null && !mObjectId.equals("")) {
             objectitems = Object.newInstance(mObjectId,mOrgId);
         } else {
             String xObjectId=mMobileTOiRApp.getmDbHelper().getObjectId(mOrgId);
-            Log.v(mMobileTOiRApp.getLOG_TAG(), "xObjectId = " + xObjectId );
+            //Log.v(mMobileTOiRApp.getLOG_TAG(), "xObjectId = " + xObjectId );
             objectitems = Object.newInstance(xObjectId,mOrgId);
         }
 
@@ -362,7 +352,7 @@ public class ObjectActivity extends Activity {
                 StringBuilder builder = new StringBuilder();
                 HttpClient client = mMobileTOiRApp.getNewHttpClient();// new DefaultHttpClient();
                 //MobileTOiRApp app = MobileTOiRApp.getInstance();
-                Log.d(mMobileTOiRApp.getLOG_TAG(), "LoadObjects mOrgId=" + mOrgId);
+                //Log.d(mMobileTOiRApp.getLOG_TAG(), "LoadObjects mOrgId=" + mOrgId);
                 HttpGet httpGet = new HttpGet(mMobileTOiRApp.getObjectDataURL("361", mOrgId));
                 //Log.d(mMobileTOiRApp.getLOG_TAG(), "LoadObjects mOrgId=" + mOrgId);
 
@@ -383,7 +373,7 @@ public class ObjectActivity extends Activity {
 
                     }
                     else {
-                        Log.d(mMobileTOiRApp.getLOG_TAG(), "LoadObjects Error = " + statusCode);
+                        //Log.d(mMobileTOiRApp.getLOG_TAG(), "LoadObjects Error = " + statusCode);
                         //Toast.makeText(this, "Example action.", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -450,7 +440,7 @@ public class ObjectActivity extends Activity {
                     new DefaultHttpClient();
                     //MobileTOiRApp app = MobileTOiRApp.getInstance();
                     HttpGet httpGet = new HttpGet(mMobileTOiRApp.putDataURL(temp.get("OBJECT_ID"), temp.get("CODE")));
-                    Log.d(mMobileTOiRApp.getLOG_TAG(), "SaveObjects httpGet=" + mMobileTOiRApp.putDataURL(temp.get("OBJECT_ID"), temp.get("CODE")));
+                    //Log.d(mMobileTOiRApp.getLOG_TAG(), "SaveObjects httpGet=" + mMobileTOiRApp.putDataURL(temp.get("OBJECT_ID"), temp.get("CODE")));
 
                     try {
                         HttpResponse response = client.execute(httpGet);
@@ -464,12 +454,12 @@ public class ObjectActivity extends Activity {
                             while ((line = reader.readLine()) != null) {
                                 builder.append(line);
                             }
-                            Log.d(mMobileTOiRApp.getLOG_TAG(), "SaveObjects OBJECT_ID=" + temp.get("CODE"));
+                            //Log.d(mMobileTOiRApp.getLOG_TAG(), "SaveObjects OBJECT_ID=" + temp.get("CODE"));
                             mMobileTOiRApp.getmDbHelper().DeleteNewCode(temp.get("OBJECT_ID"));
-                            mMobileTOiRApp.getmDbHelper().UpdateHierarchy(temp.get("OBJECT_ID"),temp.get("CODE"));
+                            mMobileTOiRApp.getmDbHelper().UpdateHierarchy(temp.get("OBJECT_ID"), temp.get("CODE"));
 
                         } else {
-                            Log.d(mMobileTOiRApp.getLOG_TAG(), "SaveObjects Error = " + statusCode);
+                            //Log.d(mMobileTOiRApp.getLOG_TAG(), "SaveObjects Error = " + statusCode);
                             //Toast.makeText(this, "Example action.", Toast.LENGTH_SHORT).show();
                         }
                         barProgressDialog.incrementProgressBy(1);
@@ -513,6 +503,57 @@ public class ObjectActivity extends Activity {
         }
 
 
+    }
+
+    public void enableForegroundMode() {
+        //Log.d(TAG, "enableForegroundMode");
+
+        IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED); // filter for all
+        IntentFilter[] writeTagFilters = new IntentFilter[] {tagDetected};
+        nfcAdapter.enableForegroundDispatch(this, nfcPendingIntent, writeTagFilters, null);
+    }
+
+    public void disableForegroundMode() {
+        //Log.d(TAG, "disableForegroundMode");
+
+        nfcAdapter.disableForegroundDispatch(this);
+    }
+
+
+
+    @Override
+    protected void onResume() {
+        //Log.d(TAG, "onResume");
+
+        super.onResume();
+
+        enableForegroundMode();
+    }
+
+    @Override
+    protected void onPause() {
+        //Log.d(TAG, "onPause");
+
+        super.onPause();
+
+        disableForegroundMode();
+    }
+
+    private void vibrate() {
+        //Log.d(TAG, "vibrate");
+
+        Vibrator vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE) ;
+        vibe.vibrate(500);
+    }
+
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+
+        if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction())) {
+
+            //vibrate();
+        }
     }
 
 
