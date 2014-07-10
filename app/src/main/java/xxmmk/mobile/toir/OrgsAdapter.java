@@ -19,7 +19,7 @@ public class OrgsAdapter extends SimpleAdapter {
 
         mContext = context;
         mMobileTOiRApp = MobileTOiRApp.getInstance();
-        Log.d(mMobileTOiRApp.getLOG_TAG(), "OrgsAdapter " + mMobileTOiRApp.getmHASH());
+        //Log.d(mMobileTOiRApp.getLOG_TAG(), "OrgsAdapter " + mMobileTOiRApp.getmHASH());
 
 
 

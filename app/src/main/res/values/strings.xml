@@ -9,7 +9,8 @@
     <string name="Scanning">Сканирование метки</string>
     <string name="CatalogText">Информация по каталогу</string>
     <string name="title_activity_orgs">Каталог оборудования </string>
-    <string name="title_activity_objects">Выбор оборудования</string>
+    <string name="title_activity_objects">Каталог оборудования</string>
     <string name="hello_world">Hello world!</string>
+    <string name="title_activity_scan">Сканирование метки</string>
 
 </resources>

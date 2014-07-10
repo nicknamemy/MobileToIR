@@ -64,6 +64,9 @@ public class MobileTOiRApp extends Application {
     public String getDataURL(String mCode) {
         return this.mDataBasicURL+"?s="+mCode+"&token="+this.getmHASH();
     }
+    public String putDataURL(String mObject, String mCode) {
+        return "http://161.8.223.166:8020/get_to_oracle.aspx?s=6&P_GEN_OBJECT_ID="+mObject+"&P_NFC_CODE="+mCode+"&P_X_COORD=0&P_Y_COORD=2";
+    }
 
     public String getObjectDataURL(String mCode,String mOrgId) {
         return this.mDataBasicURL+"?s="+mCode+"&token="+this.getmHASH()+"&org_id="+mOrgId;
@@ -124,29 +127,7 @@ public class MobileTOiRApp extends Application {
         instance = this;
     }
 
-    /*public static HttpClient wrapClient(HttpClient base) {
-        try {
-            javax.net.ssl.SSLContext ctx = SSLContext.getInstance("TLS");
-            X509TrustManager tm = new X509TrustManager() {
-                public void checkClientTrusted(X509Certificate[] xcs, String string) throws CertificateException { }
 
-                public void checkServerTrusted(X509Certificate[] xcs, String string) throws CertificateException { }
-
-                public X509Certificate[] getAcceptedIssuers() {
-                    return null;
-                }
-            };
-            ctx.init(null, new TrustManager[]{tm}, null);
-            SSLSocketFactory ssf = new SSLSocketFactory(ctx);
-            ssf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-            ClientConnectionManager ccm = base.getConnectionManager();
-            SchemeRegistry sr = ccm.getSchemeRegistry();
-            sr.register(new Scheme("https", ssf, 443));
-            return new DefaultHttpClient(ccm, base.getParams());
-        } catch (Exception ex) {
-            return null;
-        }
-    }*/
     public class MySSLSocketFactory extends SSLSocketFactory {
         SSLContext sslContext = SSLContext.getInstance("TLS");
 

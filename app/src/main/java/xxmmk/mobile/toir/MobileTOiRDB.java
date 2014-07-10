@@ -22,7 +22,7 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
 
     public MobileTOiRDB(Context context) {
         // конструктор суперкласса
-        super(context, "TOiRDB", null, 1);
+        super(context, "TOiRDB", null, 2);
         mContext = context;
     }
 
@@ -59,13 +59,15 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        /*
+
         if (newVersion == 2) {
             Log.d(((MobileTOiRApp)mContext).getLOG_TAG(), "MobileTOiRDB.onUpgrade newVersion="+newVersion);
-            db.execSQL("insert into settings (key) values ('username');");
-            db.execSQL("insert into settings (key) values ('password');");
-            db.execSQL("insert into settings (key) values ('token');");
+            db.execSQL("create table new_code ("
+                    + "id integer primary key autoincrement,"
+                    + "object_id text,"
+                    + "code text" + ");");
         }
+        /*
         if (newVersion == 3) {
             Log.d(((MobileTOiRApp) mContext).getLOG_TAG(), "MobileTOiRDB.onUpgrade newVersion=" + newVersion);
             db.execSQL("create table orgs ("
@@ -240,9 +242,18 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
                 new String[] { "*" }, null, null, null, null, null);
         if (cursor.moveToFirst()) {
             do {
+                Cursor c = null;
+                c = db.rawQuery("select value from settings where key = ?", new String[] { "loadOrg"+cursor.getString(1) });
+                c.moveToFirst();
+                String value = "Нет данных";
+                if (c.getCount()!=0) {
+                    value = c.getString(c.getColumnIndex("value"));
+                }
+                c.close();
                 HashMap<String, String> temp = new HashMap<String, String>();
                 temp.put("ORG_ID", cursor.getString(1));
                 temp.put("ORG_CODE", cursor.getString(2));
+                temp.put("ORG_LOAD_TIME", value);
                 returnList.add(temp);
             } while (cursor.moveToNext());
         }
@@ -284,6 +295,21 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
         return returnList;
     }
 
+    public void replaceSettingValue (String key, String newValue) {
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        try
+        {
+            db.execSQL("delete from settings where key = ?", new String[]{key});
+            db.execSQL("insert into settings (key,value) values(?,?)", new String[]{key,newValue});
+            db.close();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
     public void loadObjects (String jsonObjects, String orgId) {
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -291,7 +317,11 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
 
         try
         {
+            db.execSQL("delete from new_code where object_id in (select object_id from hierarchy where org_id=?)", new String[] {orgId});
+
             db.execSQL("delete from hierarchy where org_id=?", new String[] {orgId});
+
+
 
             try {
                 //Toast.makeText(this.getBaseContext(), builder.toString(), Toast.LENGTH_LONG).show();
@@ -309,14 +339,13 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
                                         ,jsonObject.getString("CODE")
                                         ,jsonObject.getString("CHILD_CNT")
                             });
-
                 }
-
             }
             catch (JSONException e) {
                 e.printStackTrace();
 
             }
+            replaceSettingValue("loadOrg" + orgId, new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(Calendar.getInstance().getTime()));
             //db.execSQL("update settings set value=? where key = ?", new String[]{new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(Calendar.getInstance().getTime()), "orgs_date"});
             db.close();
 
@@ -349,5 +378,112 @@ public class MobileTOiRDB  extends SQLiteOpenHelper {
         return mReturn;
     }
 
+    public String setNewCode (String objectId,String code){
+        String mReturn ="";
+        SQLiteDatabase db = this.getWritableDatabase();
 
+        try
+        {
+            db.execSQL("delete from new_code where object_id=?", new String[] {objectId});
+
+            db.execSQL("insert into new_code(object_id,code)values (?,?)", new String[] {objectId,code});
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return mReturn;
+    }
+
+    public String getCountNewCode (String objectId) {
+        String value = null;
+        SQLiteDatabase db = this.getWritableDatabase();
+        try
+        {
+            Cursor c = null;
+            c = db.rawQuery("select count(*) as cc from new_code where object_id=?", new String[] { objectId });
+            c.moveToFirst();
+            value = c.getString(c.getColumnIndex("cc"));
+            c.close();
+            if (value.equals("1")){
+                c = db.rawQuery("select code as cc from new_code where object_id=?", new String[] { objectId });
+                c.moveToFirst();
+                value = c.getString(c.getColumnIndex("cc"));
+            }
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        return value;
+    }
+
+    public String getCountNewCodeByOrg (String orgId) {
+        String value = null;
+        SQLiteDatabase db = this.getWritableDatabase();
+        try
+        {
+            Cursor c = null;
+            c = db.rawQuery("select count(*) as cc from new_code a,hierarchy b where a.object_id=b.object_id and b.org_id=?", new String[] { orgId });
+            c.moveToFirst();
+            value = c.getString(c.getColumnIndex("cc"));
+            c.close();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        return value;
+    }
+
+    public ArrayList<HashMap<String,String>> getNewCodeByOrg (String orgId) {
+        ArrayList<HashMap<String,String>> returnList = new ArrayList<HashMap<String,String>>();
+        SQLiteDatabase db = this.getWritableDatabase();
+        try
+        {
+            Cursor cursor = null;
+            cursor = db.rawQuery("select a.object_id,a.code from new_code a,hierarchy b where a.object_id=b.object_id and b.org_id=?", new String[] { orgId });
+            if (cursor.moveToFirst()) {
+                do {
+                    HashMap<String, String> temp = new HashMap<String, String>();
+                    temp.put("OBJECT_ID", cursor.getString(0));
+                    temp.put("CODE", cursor.getString(1));
+                    returnList.add(temp);
+                } while (cursor.moveToNext());
+            }
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        return returnList;
+    }
+
+    public void DeleteNewCode (String objectId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        try
+        {
+            db.execSQL("delete from new_code  where object_id=?", new String[] { objectId });
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void UpdateHierarchy (String objectId, String code) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        try
+        {
+            db.execSQL("update hierarchy set code=?  where object_id=?", new String[] {code, objectId });
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
 }

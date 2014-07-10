@@ -53,5 +53,6 @@
         android:text="@string/Scanning"
         android:id="@+id/button3"
         android:layout_weight="0.10"
-        android:textSize="24dp" />
+        android:textSize="24dp"
+        android:visibility="invisible" />
 </LinearLayout>

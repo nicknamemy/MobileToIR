@@ -4,7 +4,8 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="?android:attr/activatedBackgroundIndicator"
-    android:descendantFocusability="blocksDescendants">
+    android:descendantFocusability="blocksDescendants"
+    android:id="@+id/item_objects">
 
 
     <LinearLayout
@@ -15,7 +16,7 @@
         android:id="@+id/orgs"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_toLeftOf="@+id/imageButton"
+        android:layout_toLeftOf="@+id/buttonScan"
         android:orientation="vertical"
         android:gravity="center_vertical">
 
@@ -23,7 +24,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/objects_text1"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="orgs_text1"
+            android:text="objects_text1"
             android:textStyle="bold"
             android:layout_width="match_parent" />
 
@@ -32,7 +33,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="orgs_text2" />
+            android:text="objects_text2" />
 
 
     </LinearLayout>
@@ -40,7 +41,7 @@
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/imageButton"
+        android:id="@+id/buttonScan"
         android:layout_gravity="right"
         android:src="@drawable/nfc"
         android:focusable="false"
@@ -52,6 +53,8 @@
         android:layout_alignParentEnd="false"
         android:layout_alignParentStart="false"
         android:layout_alignWithParentIfMissing="false"
-        android:layout_centerInParent="true" />
+        android:layout_centerInParent="true"
+        android:adjustViewBounds="false"
+        android:cropToPadding="false" />
 
 </RelativeLayout>

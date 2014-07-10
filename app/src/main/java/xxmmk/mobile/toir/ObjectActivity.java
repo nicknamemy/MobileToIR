@@ -4,6 +4,12 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.AsyncTask;
@@ -13,9 +19,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,7 +43,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
+
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
+import android.content.DialogInterface.OnClickListener;
 
 import xxmmk.mobile.toir.R;
 
@@ -46,12 +59,18 @@ public class ObjectActivity extends Activity {
     private View mProgressView;
     private View mBottomBar;
     private LoadObjects mLoadTask = null;
+    private SaveObjects mSaveTask = null;
     private String mObjectId;
     private String mOrgId;
     private String mOrgCode;
     private Button btnLoad;
     private Button btnUpLoad;
-    private OrgsAdapter adapter;
+    private ObjectAdapter adapter;
+    private AlertDialog.Builder ad;
+    Context context;
+    ProgressDialog ringProgressDialog;
+    ProgressDialog barProgressDialog;
+
 
 
     @Override
@@ -64,6 +83,7 @@ public class ObjectActivity extends Activity {
         mProgressView = findViewById(R.id.login_progress);
         mBottomBar =findViewById(R.id.bottom_bar);
         mMobileTOiRApp = ((MobileTOiRApp) this.getApplication());
+        context = ObjectActivity.this;
     }
 
 
@@ -102,16 +122,59 @@ public class ObjectActivity extends Activity {
         btnLoad = (Button) this.findViewById(R.id.btnLoad);
         btnUpLoad = (Button) this.findViewById(R.id.btnUpload);
 
+        btnUpLoad.setOnClickListener(new View.OnClickListener() {
+                                         @Override
+                                         public void onClick(View view) {
+                                             saveHierarchy(mOrgId);
+                                         }
+                                     });
+
         btnLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.v(mMobileTOiRApp.getLOG_TAG(), "mObjectId = " + mObjectId + " mOrgId= "+mOrgId );
-                loadHierarchy(mOrgId);
+                //Log.v(mMobileTOiRApp.getLOG_TAG(), "mObjectId = " + mObjectId + " mOrgId= "+mOrgId );
+                String countNewCode = mMobileTOiRApp.getmDbHelper().getCountNewCodeByOrg(mOrgId);
+                if (countNewCode.equals("0")) {
+                    loadHierarchy(mOrgId);
+                } else {
+                    ad = new AlertDialog.Builder(ObjectActivity.this);
+                    ad.setTitle("Внимание");  // заголовок
+                    ad.setMessage("Существуют невыгруженные метки, которые могут быть утеряны. Продолжить?"); // сообщение
+                    String button1String = "Да";
+                    String button2String = "Отмена";
+                    ad.setPositiveButton(button1String, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int arg1) {
+                            //String countNewCode = mMobileTOiRApp.getmDbHelper().getCountNewCodeByOrg(mOrgId);
+                            //Toast.makeText(context, "Да", Toast.LENGTH_LONG).show();
+                            loadHierarchy(mOrgId);
+                        }
+                    });
+                    ad.setNegativeButton(button2String, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int arg1) {
+                            Toast.makeText(context, "Отмена", Toast.LENGTH_LONG).show();
+                            //saveHierarchy(mOrgId);
+                        }
+                    });
+                    ad.setCancelable(false);
+                /*ad.setOnCancelListener(new OnCancelListener() {
+                    public void onCancel(DialogInterface dialog) {
+                        Toast.makeText(context, "Вы ничего не выбрали",
+                                Toast.LENGTH_LONG).show();
+                    }
+                });*/
+                    ad.show();
+                    //loadHierarchy(mOrgId);
                 }
+            }
             });
 
         if (mObjectId != null && !mObjectId.equals("")) {
             mBottomBar.setVisibility(View.INVISIBLE);
+            RelativeLayout.LayoutParams p = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            p.addRule(RelativeLayout.ABOVE);
+            p.addRule(RelativeLayout.BELOW,R.id.linearLayout);
+            listObjects.setLayoutParams(p);
             //btnLoad.setVisibility(View.INVISIBLE);
             //btnUpLoad.setVisibility(View.INVISIBLE);
         }
@@ -159,14 +222,21 @@ public class ObjectActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View v,
                                     final int position, long id) {
-                /*Log.i("List View Clicked", "**********");
-                Toast.makeText(this,"List View Clicked:" + position, Toast.LENGTH_LONG)
-                        .show();*/
-                Intent intent = new Intent(parent.getContext(), ObjectActivity.class);
-                Bundle b = new Bundle();
+
+
                 HashMap<String,String> obj = (HashMap<String,String>)adapter.getItem(position);
 
+                String countChild = obj.get("CHILD_CNT");
 
+                Intent intent;
+                if (countChild.equals("0")) {
+                    intent = new Intent(parent.getContext(), ScanActivity.class);
+                } else
+                {
+                    intent = new Intent(parent.getContext(), ObjectActivity.class);
+                }
+                //intent = new Intent(parent.getContext(), ObjectActivity.class);
+                Bundle b = new Bundle();
                 b.putString("ORG_ID", mOrgId);
                 b.putString("OBJECT_ID", obj.get("OBJECT_ID"));
                 b.putString("ORG_CODE", mOrgCode + "/" +obj.get("SN"));
@@ -205,15 +275,35 @@ public class ObjectActivity extends Activity {
             btnUpLoad.setEnabled(false);
 
         }
-        adapter = new OrgsAdapter(this.getBaseContext(), objectitems.ObjectsList, R.layout.item_objects, from, to);
+        adapter = new ObjectAdapter(this.getBaseContext(), objectitems.ObjectsList, R.layout.item_objects, from, to);
 
         listObjects.setAdapter(adapter);
     }
 
     public void loadHierarchy(String orgId){
-        showProgress(true);
+        ringProgressDialog =ProgressDialog.show(ObjectActivity.this, "Подождите ...", "Загружается иерархия оборудования ...", true);
+        ringProgressDialog.setCancelable(false);
+
+        //showProgress(true);
         mLoadTask = new LoadObjects(orgId);
         mLoadTask.execute((Void) null);
+
+    }
+
+    public void saveHierarchy(String orgId){
+        //showProgress(true);
+        ArrayList<HashMap<String,String>> newCodes =mMobileTOiRApp.getmDbHelper().getNewCodeByOrg(mOrgId) ;
+        if (!newCodes.isEmpty()) {
+            barProgressDialog = new ProgressDialog(ObjectActivity.this);
+            barProgressDialog.setTitle("Сохранение ...");
+            barProgressDialog.setMessage("Передача данных ...");
+            barProgressDialog.setProgressStyle(barProgressDialog.STYLE_HORIZONTAL);
+            barProgressDialog.setProgress(0);
+            barProgressDialog.setMax(newCodes.size());
+            barProgressDialog.show();
+            mSaveTask = new SaveObjects(orgId);
+            mSaveTask.execute((Void) null);
+        }
 
     }
 
@@ -254,8 +344,7 @@ public class ObjectActivity extends Activity {
     }
 
     /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
+     * Загрузка иерархии оборудования по цеху в ассинхронном потоке
      */
     public class LoadObjects extends AsyncTask<Void, Void, Boolean> {
 
@@ -329,7 +418,8 @@ public class ObjectActivity extends Activity {
         @Override
         protected void onPostExecute(final Boolean success) {
             mLoadTask = null;
-            showProgress(false);
+            ringProgressDialog.dismiss();
+            //showProgress(false);
 
             if (success) {
                 finish();
@@ -346,4 +436,95 @@ public class ObjectActivity extends Activity {
 
 
     }
+
+    /**
+     * Загрузка иерархии оборудования по цеху в ассинхронном потоке
+     */
+    public class SaveObjects extends AsyncTask<Void, Void, Boolean> {
+
+        private final String mOrgId;
+        private String mToken = "null";
+
+        SaveObjects(String orgId) {
+            mOrgId = orgId;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            Boolean vStatus = false;
+            ArrayList<HashMap<String,String>> newCodes =mMobileTOiRApp.getmDbHelper().getNewCodeByOrg(mOrgId) ;
+            if (!newCodes.isEmpty()) {
+                for (HashMap<String,String> temp : newCodes )
+                try {
+                    StringBuilder builder = new StringBuilder();
+                    HttpClient client = mMobileTOiRApp.getNewHttpClient();
+                    new DefaultHttpClient();
+                    //MobileTOiRApp app = MobileTOiRApp.getInstance();
+                    HttpGet httpGet = new HttpGet(mMobileTOiRApp.putDataURL(temp.get("OBJECT_ID"), temp.get("CODE")));
+                    Log.d(mMobileTOiRApp.getLOG_TAG(), "SaveObjects httpGet=" + mMobileTOiRApp.putDataURL(temp.get("OBJECT_ID"), temp.get("CODE")));
+
+                    try {
+                        HttpResponse response = client.execute(httpGet);
+                        StatusLine statusLine = response.getStatusLine();
+                        int statusCode = statusLine.getStatusCode();
+                        if (statusCode == 200) {
+                            HttpEntity entity = response.getEntity();
+                            InputStream content = entity.getContent();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(content));
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                builder.append(line);
+                            }
+                            Log.d(mMobileTOiRApp.getLOG_TAG(), "SaveObjects OBJECT_ID=" + temp.get("CODE"));
+                            mMobileTOiRApp.getmDbHelper().DeleteNewCode(temp.get("OBJECT_ID"));
+                            mMobileTOiRApp.getmDbHelper().UpdateHierarchy(temp.get("OBJECT_ID"),temp.get("CODE"));
+
+                        } else {
+                            Log.d(mMobileTOiRApp.getLOG_TAG(), "SaveObjects Error = " + statusCode);
+                            //Toast.makeText(this, "Example action.", Toast.LENGTH_SHORT).show();
+                        }
+                        barProgressDialog.incrementProgressBy(1);
+
+                    } catch (ClientProtocolException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    Thread.sleep(1);
+
+                } catch (InterruptedException e) {
+                    return false;
+                }
+                return true;
+            }
+            else {
+                //Toast.makeText(context, "Нет меток", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            mSaveTask = null;
+            barProgressDialog.dismiss();
+            //showProgress(false);
+
+            if (success) {
+                finish();
+            } else {
+                Toast.makeText(getParent(), "Error.", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            mSaveTask = null;
+            barProgressDialog.dismiss();
+        }
+
+
+    }
+
+
 }

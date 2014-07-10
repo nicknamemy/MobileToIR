@@ -28,10 +28,10 @@ public class OrgsActivity extends Activity {
         super.onStart();
         listOrgs = (ListView) this.findViewById(R.id.listOrgs);
         String[] from = {
-                "ORG_ID",
-                "ORG_CODE"
+                "ORG_CODE",
+                "ORG_LOAD_TIME"
         };
-        int[] to = {R.id.orgs_text2,R.id.orgs_text1};
+        int[] to = {R.id.orgs_text1,R.id.orgs_text2};
 
         Orgs orgitems=Orgs.newInstance();
         final OrgsAdapter adapter = new OrgsAdapter(this.getBaseContext(), orgitems.OrgsList, R.layout.item_orgs, from, to);
@@ -52,7 +52,7 @@ public class OrgsActivity extends Activity {
                 b.putString("ORG_CODE", obj.get("ORG_CODE"));
                 b.putString("OBJECT_ID", "");
                 //b.putSerializable("HashMap",obj);
-                Log.v(mMobileTOiRApp.getLOG_TAG(), "itemClick: position = " + position + ", id = " + id + " ORG_ID=" + obj.get("ORG_ID"));
+                //Log.v(mMobileTOiRApp.getLOG_TAG(), "itemClick: position = " + position + ", id = " + id + " ORG_ID=" + obj.get("ORG_ID"));
                 intent.putExtras(b);
                 //intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
